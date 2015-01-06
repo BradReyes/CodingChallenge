@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -54,7 +56,8 @@ public class Challenge {
 	// Stage 4
 	private static String addInterval(String date, int seconds) {
 
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		//2015-01-06T03:51:57+00:00
 		Date curDate = null; // check this if error
 		try {
 			curDate = df.parse(date);
@@ -70,13 +73,6 @@ public class Challenge {
 		return formatted;
 	}
 
-	// for testing
-	private static void printArray(String[] array) {
-		int length = array.length;
-		for (int i = 0; i < length; i++) {
-			System.out.println(array[i]);
-		}
-	}
 
 	private static JSONObject getJSONObject() {
 		JSONObject o = new JSONObject();
@@ -91,73 +87,96 @@ public class Challenge {
 	private static void stage1() {
 		JSONObject o = getJSONObject();
 		// to getstring endpoint
-		String toReverse = "reverse";
+		String toReverse = sendAndGetPayload("http://challenge.code2040.org/api/getstring", o.toString());
 		String reversed = reverseString(toReverse);
 
-		// JSONObject output = new JSONObject();
 		try {
 			o.put("string", reversed);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-		System.out.println(o.toString());
-		String payload = o.toString(); // use this to return
-		// to output to endpoint validatestring
+		sendAndGetPayload("http://challenge.code2040.org/api/validatestring", o.toString());
 	}
 
 	private static void stage2() {
 		JSONObject o = getJSONObject();
 
 		// get from http
-		String[] haystack = new String[] { "one", "two", "three", "four",
-				"five" };
-		int index = findNeedle("two", haystack);
-
+		String response = sendAndGetPayload("http://challenge.code2040.org/api/haystack", o.toString());
+		String[] haystack = null;
+		String needle = null;
+		try {
+			JSONObject feedback = new JSONObject(response);
+			needle = feedback.getString("needle");
+			JSONArray arr = feedback.getJSONArray("haystack");
+			haystack = new String[arr.length()];
+			for (int i = 0; i < arr.length(); i++) {
+				haystack[i] = arr.getString(i);
+			}
+			
+		} catch (JSONException e1) {
+			e1.printStackTrace();
+		}
+				
+		int index = findNeedle(needle, haystack);
 		try {
 			o.put("needle", index);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-		String payload = o.toString();
-		System.out.println(payload);
+		sendAndGetPayload("http://challenge.code2040.org/api/validateneedle", o.toString());
 	}
 
 	private static void stage3() {
 		JSONObject o = getJSONObject();
-
-		// get from http
-		String prefix = "bo";
-		String[] strings = new String[] { "bowl", "yes1", "bold", "bo",
-				"loco2", "b", "obo", "bbo" };
-
-		String[] answers = findPrefix(prefix, strings);
+		String response = sendAndGetPayload("http://challenge.code2040.org/api/prefix", o.toString());
+		String prefix = null;
+		String[] array = null;
+		try {
+			JSONObject feedback = new JSONObject(response);
+			prefix = feedback.getString("prefix");
+			JSONArray arr = feedback.getJSONArray("array");
+			array = new String[arr.length()];
+			for (int i = 0; i < arr.length(); i++) {
+				array[i] = arr.getString(i);
+			}
+		} catch (JSONException e1) {
+			e1.printStackTrace();
+		}
+		String[] answers = findPrefix(prefix, array);
 		try {
 			o.put("array", answers);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-		// printArray(answers);
-		String payload = o.toString();
-		System.out.println(payload);
+		sendAndGetPayload("http://challenge.code2040.org/api/validateprefix", o.toString());
 	}
 
 	private static void stage4() {
 		JSONObject o = getJSONObject();
-		// get from http
-		String date = "date";
-		int seconds = 1;
+		String response = sendAndGetPayload("http://challenge.code2040.org/api/time", o.toString());
+		String date = null;
+		int seconds = 0;
+		try {
+			JSONObject feedback = new JSONObject(response);
+			date = feedback.getString("datestamp");
+			seconds = feedback.getInt("interval");
+		} catch (JSONException e1) {
+			e1.printStackTrace();
+		}
 		String updatedDate = addInterval(date, seconds);
 		try {
 			o.put("datestamp", updatedDate);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-		String payload = o.toString();
+		sendAndGetPayload("http://challenge.code2040.org/api/validatetime", o.toString());
 	}
 
 	
 	
 	private static String sendAndGetPayload(String targetURL, String jsonPost) {
+		System.out.println("Post:" + jsonPost);
 	    URL url;
 	    HttpURLConnection connection = null;  
 	    try {
@@ -168,35 +187,34 @@ public class Challenge {
 	      connection.setRequestProperty("Content-Type", 
 	           "application/json");
 
-	      /*connection.setRequestProperty("Content-Length", "" + 
-	               Integer.toString(jsonPost.getBytes().length));
-	      connection.setRequestProperty("Content-Language", "en-US"); */ 
+	      connection.setRequestProperty("Content-Length", "" + jsonPost.length());
 
-	      connection.setUseCaches (false);
 	      connection.setDoInput(true);
 	      connection.setDoOutput(true);
 
 	      //Send request
-	      DataOutputStream wr = new DataOutputStream (
-	                  connection.getOutputStream ());
-	      wr.writeBytes (jsonPost);
-	      wr.flush ();
+	      OutputStream wr = connection.getOutputStream();
+	      wr.write(jsonPost.getBytes());
 	      wr.close ();
 
-	      //Get Response    
+	      //Get Response   
 	      InputStream is = connection.getInputStream();
 	      BufferedReader rd = new BufferedReader(new InputStreamReader(is));
 	      String line;
 	      StringBuffer response = new StringBuffer(); 
+	      
+	      boolean first = true;
 	      while((line = rd.readLine()) != null) {
+	    	if (!first) response.append('\n');
+    		first = false;
 	        response.append(line);
-	        response.append('\n');
 	      }
+	      
 	      rd.close();
+	      System.out.println("Response: " + response.toString());
 	      return response.toString();
-
+	      
 	    } catch (Exception e) {
-
 	      e.printStackTrace();
 	      return null;
 
@@ -210,17 +228,24 @@ public class Challenge {
 
 
 	public static void main(String[] args) {
-		String registrationURL = "http://www.example.com";
+		String registrationURL = "http://challenge.code2040.org/api/register";
 		JSONObject reg = new JSONObject();
-		reg.put("email", "breyes28@stanford.edu");
-		reg.put("github", "")
-		
-		System.out.println(sendAndGetPayload(registrationURL, ));
-
-		token = "example"; // take from http
+		String email = "breyes28@stanford.edu";
+		String github = "https://github.com/BradReyes/CodingChallenge/blob/master/src/stages/Challenge.java";
+		try {
+			reg.put("email", email);
+			reg.put("github", github);
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		token = sendAndGetPayload(registrationURL, reg.toString());
 		stage1();
 		stage2();
 		stage3();
-		// stage4();
+		stage4();
+		JSONObject o = getJSONObject();
+		String grade = sendAndGetPayload("http://challenge.code2040.org/api/status", o.toString());
+		System.out.println(grade);
+		
 	}
 }
