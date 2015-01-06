@@ -114,7 +114,7 @@ public class Challenge {
 		String needle = null;
 		try {
 			JSONObject resultFeedback = new JSONObject(response);
-			JSONObject feedback = new JSONObject(resultFeedback.getString("result"));
+			JSONObject feedback = resultFeedback.getJSONObject("result");
 			needle = feedback.getString("needle");
 			JSONArray arr = feedback.getJSONArray("haystack");
 			haystack = new String[arr.length()];
