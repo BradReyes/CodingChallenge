@@ -87,7 +87,14 @@ public class Challenge {
 	private static void stage1() {
 		JSONObject o = getJSONObject();
 		// to getstring endpoint
-		String toReverse = sendAndGetPayload("http://challenge.code2040.org/api/getstring", o.toString());
+		String jsonToReverse = sendAndGetPayload("http://challenge.code2040.org/api/getstring", o.toString());
+		String toReverse = null;
+		try {
+			JSONObject feedback = new JSONObject(jsonToReverse);
+			toReverse = feedback.getString("result");
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 		String reversed = reverseString(toReverse);
 
 		try {
@@ -230,6 +237,7 @@ public class Challenge {
 	public static void main(String[] args) {
 		String registrationURL = "http://challenge.code2040.org/api/register";
 		JSONObject reg = new JSONObject();
+		
 		String email = "breyes28@stanford.edu";
 		String github = "https://github.com/BradReyes/CodingChallenge/blob/master/src/stages/Challenge.java";
 		try {
@@ -238,7 +246,13 @@ public class Challenge {
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
-		token = sendAndGetPayload(registrationURL, reg.toString());
+		String jsonToken = sendAndGetPayload(registrationURL, reg.toString());
+		try {
+			JSONObject feedback = new JSONObject(jsonToken);
+			token = feedback.getString("result");
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 		stage1();
 		stage2();
 		stage3();
