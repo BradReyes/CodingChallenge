@@ -141,7 +141,8 @@ public class Challenge {
 		String prefix = null;
 		String[] array = null;
 		try {
-			JSONObject feedback = new JSONObject(response);
+			JSONObject resultFeedback = new JSONObject(response);
+			JSONObject feedback = new JSONObject(resultFeedback.getString("result"));
 			prefix = feedback.getString("prefix");
 			JSONArray arr = feedback.getJSONArray("array");
 			array = new String[arr.length()];
@@ -166,7 +167,8 @@ public class Challenge {
 		String date = null;
 		int seconds = 0;
 		try {
-			JSONObject feedback = new JSONObject(response);
+			JSONObject resultFeedback = new JSONObject(response);
+			JSONObject feedback = new JSONObject(resultFeedback.getString("result"));
 			date = feedback.getString("datestamp");
 			seconds = feedback.getInt("interval");
 		} catch (JSONException e1) {
@@ -260,6 +262,12 @@ public class Challenge {
 		stage4();
 		JSONObject o = getJSONObject();
 		String grade = sendAndGetPayload("http://challenge.code2040.org/api/status", o.toString());
+		try {
+			JSONObject resultFeedback = new JSONObject(grade);
+			grade = resultFeedback.getString("result");
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 		System.out.println(grade);
 		
 	}
