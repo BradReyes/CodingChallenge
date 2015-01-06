@@ -142,7 +142,7 @@ public class Challenge {
 		String[] array = null;
 		try {
 			JSONObject resultFeedback = new JSONObject(response);
-			JSONObject feedback = new JSONObject(resultFeedback.getString("result"));
+			JSONObject feedback = resultFeedback.getJSONObject("result");;
 			prefix = feedback.getString("prefix");
 			JSONArray arr = feedback.getJSONArray("array");
 			array = new String[arr.length()];
@@ -168,7 +168,7 @@ public class Challenge {
 		int seconds = 0;
 		try {
 			JSONObject resultFeedback = new JSONObject(response);
-			JSONObject feedback = new JSONObject(resultFeedback.getString("result"));
+			JSONObject feedback = resultFeedback.getJSONObject("result");;
 			date = feedback.getString("datestamp");
 			seconds = feedback.getInt("interval");
 		} catch (JSONException e1) {
