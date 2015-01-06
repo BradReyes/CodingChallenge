@@ -175,6 +175,7 @@ public class Challenge {
 			e1.printStackTrace();
 		}
 		String updatedDate = addInterval(date, seconds);
+		System.out.println("DATESTAMP: " + updatedDate);
 		try {
 			o.put("datestamp", updatedDate);
 		} catch (JSONException e) {
@@ -261,14 +262,6 @@ public class Challenge {
 		stage3();
 		stage4();
 		JSONObject o = getJSONObject();
-		String grade = sendAndGetPayload("http://challenge.code2040.org/api/status", o.toString());
-		try {
-			JSONObject resultFeedback = new JSONObject(grade);
-			grade = resultFeedback.getString("result");
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		System.out.println(grade);
-		
+		sendAndGetPayload("http://challenge.code2040.org/api/status", o.toString());
 	}
 }
