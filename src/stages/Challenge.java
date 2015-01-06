@@ -56,7 +56,7 @@ public class Challenge {
 	// Stage 4
 	private static String addInterval(String date, int seconds) {
 
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.sss'Z'");
 		//2015-01-06T03:51:57+00:00
 		Date curDate = null; // check this if error
 		try {
